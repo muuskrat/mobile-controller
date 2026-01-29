@@ -2,6 +2,7 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Header, HTTPExcepti
 import firebase_admin
 from firebase_admin import auth, credentials
 import json
+import os
 from fastapi.middleware.cors import CORSMiddleware
 
 # 1. Check if we are on Render (looking for our variable)
