@@ -5,9 +5,9 @@ import time
 from graph import compiled_graph # Your LangGraph logic
 
 # Use a .env or config file to store your unique User ID
-USER_ID = "YOUR_FIREBASE_UID" 
+USER_ID = "ovVLHZWFm6cWaxNCZS1UqJn246Q2" 
 # When deployed, this will be wss://your-app.render.com/ws/
-BACKEND_WS_URL = f"ws://localhost:8000/ws/{USER_ID}" 
+BACKEND_WS_URL = f"wss://your-app-name.onrender.com/ws/{USER_ID}"
 
 async def run_agent():
     while True: # Infinite loop to keep it "Always On"
