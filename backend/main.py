@@ -2,6 +2,7 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Header, HTTPExcepti
 import firebase_admin
 from firebase_admin import auth, credentials
 import json
+from fastapi.middleware.cors import CORSMiddleware
 
 # Initialize Firebase (You'll need your serviceAccountKey.json)
 cred = credentials.Certificate("firebase_key.json")
@@ -12,18 +13,28 @@ app = FastAPI()
 # Map of { user_id: WebSocket }
 active_connections = {}
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], # Allows your mobile app to connect
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 @app.websocket("/ws/{user_id}")
 async def websocket_endpoint(websocket: WebSocket, user_id: str):
     await websocket.accept()
     active_connections[user_id] = websocket
-    print(f"PC Connected: {user_id}")
     try:
         while True:
-            # Keep connection alive
-            await websocket.receive_text()
+            # Receive the AI response sent from the PC agent
+            raw_data = await websocket.receive_text()
+            data = json.loads(raw_data)
+            print(f"AI Response from PC {user_id}: {data.get('reply')}")
+            # Later, you can add code here to push this to Firestore 
+            # so the Flutter app can see it.
     except WebSocketDisconnect:
-        del active_connections[user_id]
-        print(f"PC Disconnected: {user_id}")
+        if user_id in active_connections:
+            del active_connections[user_id]
 
 @app.post("/send_msg")
 async def handle_mobile_command(request_data: dict, authorization: str = Header(None)):
