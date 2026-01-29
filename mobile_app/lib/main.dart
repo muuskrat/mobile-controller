@@ -6,10 +6,15 @@ import 'dart:convert';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(); // Requires google-services.json setup
-  runApp(const RemoteControlApp());
+  try {
+    print("Initializing Firebase...");
+    await Firebase.initializeApp();
+    print("Firebase Success!");
+    runApp(const RemoteControlApp());
+  } catch (e) {
+    print("CRASH DURING STARTUP: $e"); // This will tell us exactly what's wrong
+  }
 }
-
 class RemoteControlApp extends StatelessWidget {
   const RemoteControlApp({super.key});
 
@@ -117,7 +122,7 @@ class _ChatScreenState extends State<ChatScreen> {
       final idToken = await user.getIdToken();
 
       // 2. Replace with your FASTAPI Cloud URL
-      final url = Uri.parse('https://your-cloud-backend.render.com/send_msg');
+      final url = Uri.parse('https://mobile-controller.onrender.com/send_msg');
       
       final response = await http.post(
         url,

@@ -1,13 +1,21 @@
+import os
+from dotenv import load_dotenv
+
+# 1. LOAD THIS FIRST
+load_dotenv() 
+
 import asyncio
 import websockets
 import json
 import time
-from graph import compiled_graph # Your LangGraph logic
+
+# 2. NOW IMPORT THE GRAPH (It will now see the API key)
+from graph import compiled_graph
 
 # Use a .env or config file to store your unique User ID
 USER_ID = "ovVLHZWFm6cWaxNCZS1UqJn246Q2" 
 # When deployed, this will be wss://your-app.render.com/ws/
-BACKEND_WS_URL = f"wss://your-app-name.onrender.com/ws/{USER_ID}"
+BACKEND_WS_URL = f"wss://mobile-controller.onrender.com/ws/{USER_ID}"
 
 async def run_agent():
     while True: # Infinite loop to keep it "Always On"

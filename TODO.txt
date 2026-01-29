@@ -1,0 +1,15 @@
+DESKTOP AGENT
+    create a front facing app for the pc version
+    add more things the agent can do
+    add screen grab IMPORTANT
+    create a multi agent graph
+
+PHONE APP
+    create a more appealing UI
+    create a secondary mascot page with ads 
+    split file into smaller more readable files
+
+BACKEND
+    understand wtf is happening
+    create a more robust login system
+    
