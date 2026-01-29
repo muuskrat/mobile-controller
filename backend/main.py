@@ -4,8 +4,17 @@ from firebase_admin import auth, credentials
 import json
 from fastapi.middleware.cors import CORSMiddleware
 
-# Initialize Firebase (You'll need your serviceAccountKey.json)
-cred = credentials.Certificate("firebase_key.json")
+# 1. Check if we are on Render (looking for our variable)
+firebase_config_env = os.getenv("FIREBASE_CONFIG")
+
+if firebase_config_env:
+    # On Render: Parse the JSON string from the environment variable
+    cred_dict = json.loads(firebase_config_env)
+    cred = credentials.Certificate(cred_dict)
+else:
+    # Locally: Use the file on your disk
+    cred = credentials.Certificate("firebase_key.json")
+
 firebase_admin.initialize_app(cred)
 
 app = FastAPI()
