@@ -1,36 +1,50 @@
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
-from pydantic import BaseModel
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Header, HTTPException
+import firebase_admin
+from firebase_admin import auth, credentials
+import json
+
+# Initialize Firebase (You'll need your serviceAccountKey.json)
+cred = credentials.Certificate("firebase_key.json")
+firebase_admin.initialize_app(cred)
 
 app = FastAPI()
 
-# This dictionary stores: { "user_id": websocket_connection }
-active_pcs = {}
-
-class CommandRequest(BaseModel):
-    user_id: str
-    command: str
-    payload: dict = {}
+# Map of { user_id: WebSocket }
+active_connections = {}
 
 @app.websocket("/ws/{user_id}")
 async def websocket_endpoint(websocket: WebSocket, user_id: str):
     await websocket.accept()
-    active_pcs[user_id] = websocket
+    active_connections[user_id] = websocket
+    print(f"PC Connected: {user_id}")
     try:
         while True:
-            # Keep the connection alive
+            # Keep connection alive
             await websocket.receive_text()
     except WebSocketDisconnect:
-        del active_pcs[user_id]
+        del active_connections[user_id]
+        print(f"PC Disconnected: {user_id}")
 
-@app.post("/send-command")
-async def send_command(req: CommandRequest):
-    if req.user_id not in active_pcs:
-        raise HTTPException(status_code=404, detail="PC not online")
+@app.post("/send_msg")
+async def handle_mobile_command(request_data: dict, authorization: str = Header(None)):
+    # 1. Verify Firebase Token from Phone
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Missing Token")
     
-    # Push the command to the specific PC's websocket
-    target_socket = active_pcs[req.user_id]
-    await target_socket.send_json({
-        "command": req.command,
-        "payload": req.payload
-    })
-    return {"status": "success"}
+    token = authorization.split(" ")[1]
+    try:
+        decoded_token = auth.verify_id_token(token)
+        uid = decoded_token['uid']
+    except:
+        raise HTTPException(status_code=401, detail="Invalid Token")
+
+    # 2. Check if the PC for THIS user is online
+    if uid not in active_connections:
+        return {"reply": "Your PC is currently offline."}
+
+    # 3. Push command to PC
+    pc_socket = active_connections[uid]
+    await pc_socket.send_json({"message": request_data["message"]})
+    
+    # In a real app, you'd wait for the PC to send a response back here
+    return {"reply": "Command sent to your PC!"}
